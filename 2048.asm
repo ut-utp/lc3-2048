@@ -34,10 +34,9 @@ MAIN
 	LEA	R0, INSTRUCTION_MESSAGE		; show instructions
 	PUTS
 
-	LEA	R0, PROMPT_TYPE_MESSAGE		; prompt for ANSI terminal
-	JSR	PROMPT
-	BRp	NEW
-	STI	R0, CLEAR_STRING_PTR
+	LEA	R0, PROMPT_SEED_MESSAGE
+	PUTS
+	JSR	GETC_SEED
 
 NEW	JSR	RESET_BOARD				; reset the board
 LOOP	JSR	DISPLAY_BOARD			; display the board
@@ -77,11 +76,10 @@ IS_DEAD
 			.FILL x0B
 			.FILL x0C
 
-	CLEAR_STRING_PTR		.FILL		CLEAR_STRING
-	PROMPT_TYPE_MESSAGE	.STRINGZ	"Are you on an ANSI terminal (y/n)? "
+	PROMPT_SEED_MESSAGE	.STRINGZ	"Press any key to start the game.\n"
 	PROMPT_DEATH_MESSAGE	.STRINGZ	"Would you like to play again (y/n)? "
 	DEATH_MESSAGE		.STRINGZ	"\nYou lost :(\n\n"
-	INSTRUCTION_MESSAGE	.STRINGZ	"Control the game using WASD keys.\n"
+	INSTRUCTION_MESSAGE	.STRINGZ	"Welcome to 2048!\n\nControl the game using WASD keys.\n"
 
 ;--------------------------------------------------------------------------
 ; RESET_BOARD
