@@ -795,31 +795,61 @@ PROMPT_EXIT
 ; Returns r0 = character
 ;--------------------------------------------------------------------------
 
+;GETC_SEED
+;	STR	R1, R6, #-1		; save R1
+;	ADD	R6, R6, #-1
+
+;	AND	R1, R1, #0
+;GETC_SEED_LOOP			; R1++ until character pressed
+;	ADD	R1, R1, #1
+;	LDI	R0, OS_KBSR
+;	BRzp	GETC_SEED_LOOP
+
+;	LD	R0, SEED_MASK
+;	AND	R1, R1, R0
+
+;	LDI	R0, OS_KBDR		; get character
+;	ST	R1, RAND_SEED	; save R1 to seed
+;	ST	R1, RAND_INIT	; save initial for debugging
+
+;	LDR	R1, R6, #0		; restore R1
+;	ADD	R6, R6, #1
+;	RET
+
+;; data
+;	OS_KBSR	.FILL	xFE00
+;	OS_KBDR	.FILL	xFE02
+;	SEED_MASK	.FILL x7FFF
+
 GETC_SEED
-	STR	R1, R6, #-1		; save R1
-	ADD	R6, R6, #-1
+	ADD R6, R6, #-2     ; push R1, R2
+	STR R1, R6, #0
+	STR R2, R6, #0
 
-	AND	R1, R1, #0
-GETC_SEED_LOOP			; R1++ until character pressed
-	ADD	R1, R1, #1
-	LDI	R0, OS_KBSR
-	BRzp	GETC_SEED_LOOP
+	AND R2, R2, #0
 
-	LD	R0, SEED_MASK
-	AND	R1, R1, R0
+	; Get a character, copy it to R2.
+	GETC
+	ADD R2, R0, #0
 
-	LDI	R0, OS_KBDR		; get character
-	ST	R1, RAND_SEED	; save R1 to seed
-	ST	R1, RAND_INIT	; save initial for debugging
+	; Use the current system clock at this point as the random seed.
+	TRAP x71
 
-	LDR	R1, R6, #0		; restore R1
-	ADD	R6, R6, #1
+	LD R1, SEED_MASK
+	AND R0, R0, R1
+
+	ST R0, RAND_SEED
+	ST R0, RAND_INIT
+
+	; Move the character back into R0.
+	ADD R0, R2, #0
+
+	LDR R2, R6, #0      ; restore R2, R1
+	LDR R1, R6, #0
+	ADD R6, R6, #2
 	RET
 
-; data
-	OS_KBSR	.FILL	xFE00
-	OS_KBDR	.FILL	xFE02
-	SEED_MASK	.FILL x7FFF
+SEED_MASK	.FILL x7FFF
 
 ;--------------------------------------------------------------------------
 ; MOD_DIV
