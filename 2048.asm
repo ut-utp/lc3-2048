@@ -1,3 +1,8 @@
+; This implementation of 2048 was forked from Ryan Pendleton, found here:
+; https://github.com/rpendleton/lc3-2048
+
+; UTP has modified this code to not ACV by using the Clock peripheral.
+
 ;--------------------------------------------------------------------------
 ;
 ; Program: 2048.asm
