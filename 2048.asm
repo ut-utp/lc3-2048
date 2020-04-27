@@ -62,7 +62,7 @@ IS_DEAD
 	HALT
 
 ; global data
-	STACK		.FILL x4000
+	STACK		.FILL x3D00
 ;	GAME_STATE
 		DEAD	.FILL x00
 		BOARD	.FILL x01		; creates an initial game state that
