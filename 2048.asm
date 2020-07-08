@@ -1,7 +1,8 @@
 ; This implementation of 2048 was forked from Ryan Pendleton, found here:
 ; https://github.com/rpendleton/lc3-2048
 
-; UTP has modified this code to not ACV by using the Clock peripheral.
+; UTP has modified this code to not ACV by using the Clock peripheral
+; and added ANSI color support.
 
 ;--------------------------------------------------------------------------
 ;
@@ -43,6 +44,8 @@ MAIN
 	JSR	PROMPT
 	BRp	NEW
 	STI	R0, CLEAR_STRING_PTR
+	LD 	R0, BOARD_LABELS_REGULAR_ADDR
+	ST 	R0, BOARD_LABELS_PTR
 
 NEW	JSR	RESET_BOARD				; reset the board
 LOOP	JSR	DISPLAY_BOARD			; display the board
@@ -82,8 +85,11 @@ IS_DEAD
 			.FILL x0B
 			.FILL x0C
 
+	BOARD_LABELS_REGULAR_ADDR 	.FILL 		BOARD_LABELS
+
 	CLEAR_STRING_PTR		.FILL		CLEAR_STRING
-	PROMPT_TYPE_MESSAGE	.STRINGZ	"Are you on an ANSI terminal (y/n)? "
+	BOARD_LABELS_PTR		.FILL		BOARD_LABELS_ANSI
+	PROMPT_TYPE_MESSAGE		.STRINGZ	"Are you on an ANSI terminal (y/n)? "
 	PROMPT_DEATH_MESSAGE	.STRINGZ	"Would you like to play again (y/n)? "
 	DEATH_MESSAGE		.STRINGZ	"\nYou lost :(\n\n"
 	INSTRUCTION_MESSAGE	.STRINGZ	"Control the game using WASD keys.\n"
@@ -602,7 +608,7 @@ DISPLAY_BOARD
 	LEA	R0, CLEAR_STRING	; clear screen if on ANSI terminal
 	PUTS
 
-	LEA	R1, BOARD_LABELS
+	LDI	R1, BOARD_LABELS_PTR_PTR
 	AND	R2, R2, #0
 
 	LEA	R0, LINE_BORDER	; display border
@@ -627,8 +633,11 @@ DISPLAY_NEXT_SPACE
 	LDR	R3, R3, #0
 	ADD	R2, R2, #1
 
-	ADD	R0, R3, R3			; multiply by 5
+	ADD	R0, R3, R3			; multiply by 10
 	ADD	R0, R0, R0
+	ADD	R0, R0, R0
+
+	ADD	R0, R0, R3
 	ADD	R0, R0, R3
 
 	ADD	R0, R0, R1			; get the label for board[i]
@@ -669,34 +678,118 @@ DIS_FINISH
 	ADD	R6, R6, #1
 	RET
 
+; TODO: ANSI/not-ANSI for LINE_BORDER/EMPTY_BORDER/LEFT_BORDER/RIGHT_BORDER
+; Or, add clears to the board labels (this is better but needs assembler support on our end)
+
 ; data
 ;	SYSTEM_TYPE		; first byte of clear string is either \e or \0
-	CLEAR_STRING	.STRINGZ	"\e[2J\e[H\e[3J"
-	LINE_BORDER		.STRINGZ	"+--------------------------+"
-	EMPTY_BORDER	.STRINGZ	"|                          |"
-	LEFT_BORDER		.STRINGZ	"| "
-	RIGHT_BORDER	.STRINGZ	" |\n"
+	CLEAR_STRING 	;.FILL       x1B
+					;.STRINGZ	"[2J\e[H\e[3J"
+					.STRINGZ  	"" ; TODO: fix pending assembler support (handle escapes)
+	LINE_BORDER		.FILL       x1B
+					.STRINGZ	"[37;40m+--------------------------+"
+	EMPTY_BORDER	.FILL       x1B
+					.STRINGZ	"[37;40m|                          |"
+	LEFT_BORDER		.FILL       x1B
+					.STRINGZ	"[37;40m| "
+	RIGHT_BORDER	.FILL       x1B
+					.STRINGZ	"[37;22;40m |\n"
 
 	SPACE			.FILL	x20 ; space
 	NEW_LINE		.FILL	x0A ; new line
 
-	BOARD_LABELS	.STRINGZ	"    "
+	BOARD_LABELS_PTR_PTR 	.FILL BOARD_LABELS_PTR
+
+	BOARD_LABELS
+				.STRINGZ	"    "
+				.STRINGZ	"    "
 				.STRINGZ	" 2  "
+				.STRINGZ	"    "
 				.STRINGZ	" 4  "
+				.STRINGZ	"    "
 				.STRINGZ	" 8  "
+				.STRINGZ	"    "
 				.STRINGZ	" 16 "
+				.STRINGZ	"    "
 				.STRINGZ	" 32 "
+				.STRINGZ	"    "
 				.STRINGZ	" 64 "
+				.STRINGZ	"    "
 				.STRINGZ	"128 "
+				.STRINGZ	"    "
 				.STRINGZ	"256 "
+				.STRINGZ	"    "
 				.STRINGZ	"512 "
+				.STRINGZ	"    "
 				.STRINGZ	"1024"
+				.STRINGZ	"    "
 				.STRINGZ	"2048"
+				.STRINGZ	"    "
 				.STRINGZ	"4096"
+				.STRINGZ	"    "
 				.STRINGZ	"8192"
+				.STRINGZ	"    "
 				.STRINGZ	"2^14"
+				.STRINGZ	"    "
 				.STRINGZ	"2^15"
+				.STRINGZ	"    "
 				.STRINGZ	"2^16"
+				.STRINGZ	"    "
+
+
+	BOARD_LABELS_ANSI
+				.FILL       x1B
+				.STRINGZ	"[0m    "
+				.FILL       x0
+
+				.FILL       x1B
+				.STRINGZ	"[37m 2  "
+
+				.FILL       x1B
+				.STRINGZ	"[97m 4  "
+
+				.FILL       x1B
+				.STRINGZ	"[93m 8  "
+
+				.FILL       x1B
+				.STRINGZ	"[33m 16 "
+
+				.FILL       x1B
+				.STRINGZ	"[94m 32 "
+
+				.FILL       x1B
+				.STRINGZ	"[34m 64 "
+
+				.FILL       x1B
+				.STRINGZ	"[95m128 "
+
+				.FILL       x1B
+				.STRINGZ	"[35m256 "
+
+				.FILL       x1B
+				.STRINGZ	"[31m512 "
+
+				.FILL       x1B
+				.STRINGZ	"[32m1024"
+
+				.FILL       x1B
+				.STRINGZ	"[96m2048"
+
+				.FILL       x1B
+				.STRINGZ	"[36m4096"
+
+				.FILL       x1B
+				.STRINGZ	"[36m8192"
+
+				.FILL       x1B
+				.STRINGZ	"[36m2^14"
+
+				.FILL       x1B
+				.STRINGZ	"[36m2^15"
+
+				.FILL       x1B
+				.STRINGZ	"[36m2^16"
+
 
 ;--------------------------------------------------------------------------
 ; RAND_MOD
